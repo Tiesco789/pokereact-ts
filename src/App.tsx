@@ -1,23 +1,30 @@
-import './App.css';
-import logo from './logo.svg';
+import { useEffect, useState } from 'react';
 
-const App = (): JSX.Element => (
-  <div className="App">
-    <header className="App-header">
-      <img alt="logo" className="App-logo" src={logo} />
-      <p>
-        Edit <code>src/App.tsx</code> and save to reload.
-      </p>
-      <a
-        className="App-link"
-        href="https://reactjs.org"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        Learn React
-      </a>
-    </header>
-  </div>
-);
+import Pokecard from './components/Pokecard';
+import { Busca } from './services/api';
+import './styles/index.css';
+
+const App = (): JSX.Element => {
+  const [pokemons, setPokemons] = useState<any>([]);
+
+  useEffect(() => {
+    Busca('?limit=493', setPokemons);
+  }, []);
+
+  return (
+    <>
+      <div className="container">
+        {pokemons.results?.map((pokemon: any) => (
+          <Pokecard
+            color={pokemon.color}
+            key={pokemon.name}
+            name={pokemon.name}
+            split={undefined}
+          />
+        ))}
+      </div>
+    </>
+  );
+};
 
 export default App;
