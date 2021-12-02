@@ -1,0 +1,13 @@
+{
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true
+    }
+  },
+  "[typescriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true
+    }
+  },
+  "typescript.preferences.quoteStyle": "single"
+}
