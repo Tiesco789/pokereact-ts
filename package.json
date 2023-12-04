@@ -6,14 +6,15 @@
     "@testing-library/jest-dom": "^5.15.1",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
+    "@types/axios": "^0.14.0",
     "@types/jest": "^27.0.3",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",
-    "axios": "^0.24.0",
+    "axios": "^1.6.2",
     "prettier": "^2.5.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^4.0.3",
+    "react-scripts": "^5.0.1",
     "styled-components": "^5.3.3",
     "typescript": "^4.5.2",
     "web-vitals": "^2.1.2"
@@ -22,8 +23,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint:fix": "npm run lint -- --fix"
+    "eject": "react-scripts eject"
   },
   "browserslist": {
     "production": [
