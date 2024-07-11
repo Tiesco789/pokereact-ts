@@ -1,20 +1,11 @@
 import { useEffect, useState } from 'react';
-
 import Pokecard from './components/Pokecard';
 import { Busca } from './services/api';
 import './styles/index.css';
 import SearchBar from './components/SearchBar';
-
-interface Pokemon {
-  id: number;
-  name: string;
-  types: {
-    type: {
-      name: string;
-    };
-  }[];
-  color: string;
-}
+import { Pokemon } from './IPokemon';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 interface PokemonApiResponse {
   count: number;
@@ -30,10 +21,11 @@ const App = (): JSX.Element => {
     previous: null,
     results: [],
   });
+
   const [filteredPokemon, setFilteredPokemon] = useState<Pokemon[]>([]);
 
   useEffect(() => {
-    Busca('?limit=493', (data: PokemonApiResponse) => setPokemons(data));
+    Busca('?limit=386', (data: PokemonApiResponse) => setPokemons(data));
   }, []);
 
   useEffect(() => {
@@ -41,17 +33,16 @@ const App = (): JSX.Element => {
   }, [pokemons]);
 
   const handleSearch = (searchTerm: string) => {
-    console.log('Termo de busca:', searchTerm);
     const filteredResults =
       pokemons?.results?.filter((pokemon: Pokemon) =>
         pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
       ) || [];
-    console.log('Resultados filtrados:', filteredResults);
     setFilteredPokemon(filteredResults);
   };
 
   return (
     <>
+      <Header />
       <SearchBar onSearch={handleSearch} />
       <div className="container">
         {filteredPokemon.length > 0 ? (
@@ -67,6 +58,9 @@ const App = (): JSX.Element => {
           <p>Nenhum Pokémon encontrado.</p> // Mensagem se a lista estiver vazia
         )}
       </div>
+      <Footer />
+
+      {/* <button onClick={handleLoadMore}>Carregar Mais</button> */}
     </>
   );
 };

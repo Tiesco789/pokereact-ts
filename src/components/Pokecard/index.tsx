@@ -4,29 +4,10 @@ import { Busca } from '../../services/api';
 import { IFormatedName } from './IFormatedName';
 import pokeColors from './pokecolors';
 import PokeCard from './styles';
+import { Pokemon } from '../../IPokemon';
 
 const Pokecard = (props: IFormatedName): JSX.Element => {
-  const [pokemon, setPokemon] = useState({
-    id: 0,
-    name: '',
-    sprites: {
-      front_default: '',
-      other: {
-        official_artwork: {
-          front_default: '',
-        },
-      },
-    },
-    types: [
-      {
-        slot: 0,
-        type: {
-          name: '',
-          url: '',
-        },
-      },
-    ],
-  });
+  const [pokemon, setPokemon] = useState<Pokemon>();
 
   useEffect(() => {
     const { name } = props;
@@ -60,7 +41,7 @@ const Pokecard = (props: IFormatedName): JSX.Element => {
     <>
       <PokeCard>
         <img
-          alt=""
+          alt={pokemon.name}
           src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`}
         />
         <h1>Nº {pokemon.id}</h1>
