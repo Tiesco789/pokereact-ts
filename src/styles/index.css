@@ -12,7 +12,8 @@
 
 body {
   background: #F6F8FC;
-  margin-top: 80px;
+  width: 1440px;
+  margin: 0 auto;
 }
 
 .container {

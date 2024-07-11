@@ -28,8 +28,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           placeholder="Digite o nome do Pokémon..."
           value={searchTerm}
           onChange={handleChange}
+          className='pokeSearch'
           />
         <button type="submit">Pesquisar</button>
+
+        <input className='pokeFilter' type="button" value="Filtro" />
       </form>
     </Searchbar>
   );
