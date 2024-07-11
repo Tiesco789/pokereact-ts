@@ -1,7 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import Searchbar from './styles';
 
-
 interface SearchBarProps {
   onSearch: (term: string) => void;
 }

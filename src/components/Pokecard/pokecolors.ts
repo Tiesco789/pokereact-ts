@@ -1,4 +1,8 @@
-const pokeColors = {
+interface PokeColorMap {
+  [key: string]: string; // Qualquer string é uma chave válida, e o valor é uma string (a cor)
+}
+
+const pokeColors: PokeColorMap = {
   bug: '#3B9950',
   dark: '#5A5979',
   dragon: '#5ECCD9',
