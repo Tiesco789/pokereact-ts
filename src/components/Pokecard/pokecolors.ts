@@ -1,5 +1,5 @@
 interface PokeColorMap {
-  [key: string]: string; // Qualquer string é uma chave válida, e o valor é uma string (a cor)
+  [key: string]: string;
 }
 
 const pokeColors: PokeColorMap = {

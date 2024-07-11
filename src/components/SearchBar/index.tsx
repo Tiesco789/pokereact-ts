@@ -9,11 +9,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
+    console.log("Search term updated:", newSearchTerm); // Verificação
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log("Search submitted:", searchTerm); // Verificação
     onSearch(searchTerm);
   };
 
