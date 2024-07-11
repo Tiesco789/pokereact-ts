@@ -13,6 +13,8 @@ Se trata apenas de um projetinho simples usando a [PokeAPI](https://pokeapi.co/)
 - Prettier
 - Editoconfig
 
+---
+
 ### Próximos desafios
 
 1. Criar botão de Filtro:
