@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { ChangeEvent, FormEvent, useState } from 'react';
 import Searchbar from './styles';
 
 interface SearchBarProps {
@@ -11,12 +11,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = event.target.value;
     setSearchTerm(newSearchTerm);
-    console.log("Search term updated:", newSearchTerm); // Verificação
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Search submitted:", searchTerm); // Verificação
     onSearch(searchTerm);
   };
 
@@ -29,7 +27,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           value={searchTerm}
           onChange={handleChange}
           className='pokeSearch'
-          />
+        />
         <button type="submit">Pesquisar</button>
 
         <input className='pokeFilter' type="button" value="Filtro" />
