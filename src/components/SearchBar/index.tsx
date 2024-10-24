@@ -29,8 +29,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           className='pokeSearch'
         />
         <button type="submit">Pesquisar</button>
-
-        <input className='pokeFilter' type="button" value="Filtro" />
       </form>
     </Searchbar>
   );
