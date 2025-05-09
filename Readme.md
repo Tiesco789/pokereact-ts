@@ -12,6 +12,7 @@ Se trata apenas de um projetinho simples usando a [PokeAPI](https://pokeapi.co/)
 - Axios
 - Prettier
 - Editoconfig
+- Vite
 
 ---
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
 import Header from './components/Header';
 import Pokecard from './components/Pokecard';
 import SearchBar from './components/SearchBar';

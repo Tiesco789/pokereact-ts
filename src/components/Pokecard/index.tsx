@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
 
 import { Busca } from '../../services/api';
 import { IFormatedName } from './IFormatedName';
