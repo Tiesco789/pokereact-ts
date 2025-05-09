@@ -4,7 +4,6 @@ import { Button } from 'primereact/button';
 const Header = () => {
   return (
     <>
-    <Button label="Click Me" icon="pi pi-check" className="p-button-success" />
       <HeaderStyled>
         <nav>
           <div>

@@ -5,6 +5,13 @@ import SearchBar from './components/SearchBar';
 import PokemonTypeFilter from './components/SearchBar/SearchType'; // Novo componente de filtro
 import { Pokemon } from './IPokemon';
 import { Busca } from './services/api';
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+
+import 'primereact/resources/themes/lara-light-indigo/theme.css'; //theme
+import 'primereact/resources/primereact.min.css'; //core css
+import 'primeicons/primeicons.css'; //icons
+import 'primeflex/primeflex.css'; // flex
 import './styles/index.css';
 
 interface PokemonApiResponse {
@@ -65,6 +72,7 @@ const App = (): JSX.Element => {
   return (
     <>
       <Header />
+      <Button label="Click Me" icon="pi pi-check" className="p-button-success" />
       <SearchBar onSearch={handleSearch} />
       {/* Componente de filtro de tipo de Pokémon */}
       <PokemonTypeFilter onTypeSelect={handleTypeFilter} />
