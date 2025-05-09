@@ -1,10 +1,12 @@
 import { JSX, useEffect, useState } from 'react';
+import { Card } from 'primereact/card';
 
 import { Busca } from '../../services/api';
 import { IFormatedName } from './IFormatedName';
 import pokeColors from './pokecolors';
-import PokeCard from './styles';
 import { Pokemon } from '../../IPokemon';
+
+import './styles.scss';
 
 const Pokecard = (props: IFormatedName): JSX.Element => {
   const [pokemon, setPokemon] = useState<Pokemon>();
@@ -39,14 +41,15 @@ const Pokecard = (props: IFormatedName): JSX.Element => {
 
   return (
     <>
-      <PokeCard>
+      <Card className='pokecard'>
         <img
           alt={pokemon.name}
           src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`}
+
         />
-        <h1>Nº {pokemon.id}</h1>
+        <h4>Nº {pokemon.id}</h4>
         <p>{formatName(pokemon.name)}</p>
-        <div>
+        <div id='types'>
           {pokemon.types.map(({ type }) => (
             <span style={{ backgroundColor: pokeColors[type.name] }}>
               {' '}
@@ -54,7 +57,7 @@ const Pokecard = (props: IFormatedName): JSX.Element => {
             </span>
           ))}
         </div>
-      </PokeCard>
+      </Card>
     </>
   );
 };

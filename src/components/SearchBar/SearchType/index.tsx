@@ -1,37 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import SelectType from './styles';
+import { Dropdown } from 'primereact/dropdown';
 
 interface PokemonTypeFilterProps {
   onTypeSelect: (type: string) => void;
 }
 
+interface TypeOption {
+  label: string;
+  value: string;
+}
+
 const PokemonTypeFilter: React.FC<PokemonTypeFilterProps> = ({ onTypeSelect }) => {
-  const [types, setTypes] = useState<string[]>([]);
+  const [types, setTypes] = useState<TypeOption[]>([]);
+  const [selectedType, setSelectedType] = useState<string>('');
 
   useEffect(() => {
     fetch('https://pokeapi.co/api/v2/type')
       .then(response => response.json())
-      .then(data => setTypes(data.results.map((type: any) => type.name)))
+      .then(data => {
+        const typeOptions = data.results.map((type: any) => ({
+          label: type.name.charAt(0).toUpperCase() + type.name.slice(1),
+          value: type.name
+        }));
+        setTypes(typeOptions);
+      })
       .catch(error => console.error('Erro ao buscar tipos de Pokémon:', error));
   }, []);
 
-  const handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    onTypeSelect(event.target.value);
+  const handleTypeChange = (e: { value: string }) => {
+    setSelectedType(e.value);
+    onTypeSelect(e.value);
   };
 
   return (
-    <>
-      <SelectType>
-        <select onChange={handleTypeChange}>
-          <option value="">Tipo do Pokemon ↴</option>
-          {types.map((type) => (
-            <option key={type} value={type}>
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </option>
-          ))}
-        </select>
-      </SelectType>
-    </>
+    <SelectType>
+      <Dropdown
+        value={selectedType}
+        onChange={handleTypeChange}
+        options={types}
+        placeholder="Tipo do Pokémon"
+        filter
+        className="w-full md:w-14rem"
+      />
+    </SelectType>
   );
 };
 

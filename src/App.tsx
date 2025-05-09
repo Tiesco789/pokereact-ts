@@ -6,7 +6,6 @@ import PokemonTypeFilter from './components/SearchBar/SearchType'; // Novo compo
 import { Pokemon } from './IPokemon';
 import { Busca } from './services/api';
 import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
 
 import 'primereact/resources/themes/lara-light-indigo/theme.css'; //theme
 import 'primereact/resources/primereact.min.css'; //core css
@@ -30,41 +29,47 @@ const App = (): JSX.Element => {
   });
 
   const [filteredPokemon, setFilteredPokemon] = useState<Pokemon[]>([]);
-  const [typeFilter, setTypeFilter] = useState<string>(''); // Estado para o tipo selecionado
+  const [typeFilter, setTypeFilter] = useState<string>('');
 
-  // Busca a lista completa de Pokémon
-  useEffect(() => {
+  // Função para busca inicial dos Pokémons
+  const fetchPokemons = () => {
     Busca('?limit=151', (data: PokemonApiResponse) => setPokemons(data));
+  };
+
+  // Busca e armazena a lista de Pokémons após a montagem
+  useEffect(() => {
+    fetchPokemons();
   }, []);
 
+  // Atualiza a lista filtrada sempre que pokemons ou typeFilter mudarem
   useEffect(() => {
     setFilteredPokemon(pokemons?.results || []);
   }, [pokemons]);
 
+  // Função de busca por nome do Pokémon
   const handleSearch = (searchTerm: string) => {
-    const filteredResults =
-      pokemons?.results?.filter((pokemon: Pokemon) =>
-        pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ) || [];
+    const filteredResults = pokemons?.results?.filter(pokemon =>
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
     setFilteredPokemon(filteredResults);
   };
 
-  // Função para lidar com a filtragem por tipo de Pokémon
-  const handleTypeFilter = (selectedType: string) => {
+  // Função para buscar Pokémons por tipo
+  const handleTypeFilter = async (selectedType: string) => {
     setTypeFilter(selectedType);
 
     if (selectedType) {
-      fetch(`https://pokeapi.co/api/v2/type/${selectedType}`)
-        .then(response => response.json())
-        .then(data => {
-          const filteredResults = data.pokemon.map((p: any) => p.pokemon);
-          setFilteredPokemon(filteredResults);
-        })
-        .catch(error => {
-          console.error('Erro ao buscar Pokémon por tipo:', error);
-        });
+      try {
+        const response = await fetch(`https://pokeapi.co/api/v2/type/${selectedType}`);
+        const data = await response.json();
+        const filteredResults = data.pokemon.map((p: { pokemon: Pokemon }) => p.pokemon);
+
+        setFilteredPokemon(filteredResults);
+      } catch (error) {
+        console.error('Erro ao buscar Pokémon por tipo:', error);
+      }
     } else {
-      // Se nenhum tipo estiver selecionado, exibe todos os Pokémon
+      // Se nenhum tipo for selecionado, mostra todos os Pokémons
       setFilteredPokemon(pokemons.results);
     }
   };
@@ -72,9 +77,8 @@ const App = (): JSX.Element => {
   return (
     <>
       <Header />
-      <Button label="Click Me" icon="pi pi-check" className="p-button-success" />
+
       <SearchBar onSearch={handleSearch} />
-      {/* Componente de filtro de tipo de Pokémon */}
       <PokemonTypeFilter onTypeSelect={handleTypeFilter} />
       <div className="container">
         {filteredPokemon.length > 0 ? (

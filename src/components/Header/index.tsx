@@ -1,5 +1,4 @@
 import HeaderStyled from './styles';
-import { Button } from 'primereact/button';
 
 const Header = () => {
   return (
