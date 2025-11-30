@@ -1,25 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;400;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  list-style: none;
-  outline: none;
-  border: none;
+:root {
   font-family: 'Nunito', sans-serif;
 }
 
 body {
-  background: #F6F8FC;
-  width: 1440px;
-  margin: 0 auto;
-}
-
-.container {
-  display: grid;
-  justify-content: center;
-  grid-template-columns: repeat(6, 228px);
-  gap: 16px;
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50;
 }

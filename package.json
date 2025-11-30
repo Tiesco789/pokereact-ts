@@ -10,20 +10,18 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.6",
     "axios": "^1.8.4",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.344.0",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
-    "primeflex": "^4.0.0",
-    "primeicons": "^7.0.0",
-    "primereact": "^10.9.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "styled-components": "^6.1.17",
+    "tailwind-merge": "^2.2.1",
     "tailwindcss": "^4.1.6"
   },
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/styled-components": "^5.1.34",
     "@vitejs/plugin-react": "latest",
     "sass": "^1.87.0",
     "typescript": "latest",

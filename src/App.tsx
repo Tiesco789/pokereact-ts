@@ -1,103 +1,63 @@
-import { JSX, useEffect, useState } from 'react';
-import Header from './components/Header';
-import Pokecard from './components/Pokecard';
-import SearchBar from './components/SearchBar';
-import PokemonTypeFilter from './components/SearchBar/SearchType'; // Novo componente de filtro
-import { Pokemon } from './IPokemon';
-import { Busca } from './services/api';
-import { Button } from 'primereact/button';
+import { useState, useMemo } from 'react';
+import { usePokemon } from './hooks/usePokemon';
+import { PokemonGrid } from './components/pokemon/PokemonGrid';
+import { PokemonFilter } from './components/pokemon/PokemonFilter';
+import { PokemonDetailPanel } from './components/pokemon/PokemonDetailPanel';
+import { Pokemon } from './types/pokemon';
+import { Ghost } from 'lucide-react';
 
-import 'primereact/resources/themes/lara-light-indigo/theme.css'; //theme
-import 'primereact/resources/primereact.min.css'; //core css
-import 'primeicons/primeicons.css'; //icons
-import 'primeflex/primeflex.css'; // flex
-import './styles/index.css';
+function App() {
+  const { pokemons, loading, error } = usePokemon(151);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
 
-interface PokemonApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Pokemon[];
-}
-
-const App = (): JSX.Element => {
-  const [pokemons, setPokemons] = useState<PokemonApiResponse>({
-    count: 0,
-    next: null,
-    previous: null,
-    results: [],
-  });
-
-  const [filteredPokemon, setFilteredPokemon] = useState<Pokemon[]>([]);
-  const [typeFilter, setTypeFilter] = useState<string>('');
-
-  // Função para busca inicial dos Pokémons
-  const fetchPokemons = () => {
-    Busca('?limit=151', (data: PokemonApiResponse) => setPokemons(data));
-  };
-
-  // Busca e armazena a lista de Pokémons após a montagem
-  useEffect(() => {
-    fetchPokemons();
-  }, []);
-
-  // Atualiza a lista filtrada sempre que pokemons ou typeFilter mudarem
-  useEffect(() => {
-    setFilteredPokemon(pokemons?.results || []);
-  }, [pokemons]);
-
-  // Função de busca por nome do Pokémon
-  const handleSearch = (searchTerm: string) => {
-    const filteredResults = pokemons?.results?.filter(pokemon =>
+  const filteredPokemons = useMemo(() => {
+    return pokemons.filter((pokemon) =>
       pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
-    setFilteredPokemon(filteredResults);
-  };
-
-  // Função para buscar Pokémons por tipo
-  const handleTypeFilter = async (selectedType: string) => {
-    setTypeFilter(selectedType);
-
-    if (selectedType) {
-      try {
-        const response = await fetch(`https://pokeapi.co/api/v2/type/${selectedType}`);
-        const data = await response.json();
-        const filteredResults = data.pokemon.map((p: { pokemon: Pokemon }) => p.pokemon);
-
-        setFilteredPokemon(filteredResults);
-      } catch (error) {
-        console.error('Erro ao buscar Pokémon por tipo:', error);
-      }
-    } else {
-      // Se nenhum tipo for selecionado, mostra todos os Pokémons
-      setFilteredPokemon(pokemons.results);
-    }
-  };
+    );
+  }, [pokemons, searchTerm]);
 
   return (
-    <>
-      <Header />
-
-      <SearchBar onSearch={handleSearch} />
-      <PokemonTypeFilter onTypeSelect={handleTypeFilter} />
-      <div className="container">
-        {filteredPokemon.length > 0 ? (
-          filteredPokemon.map((pokemon: Pokemon) => (
-            <Pokecard
-              color={pokemon.color}
-              key={pokemon.name}
-              name={pokemon.name}
-              split={undefined}
-            />
-          ))
-        ) : (
-          <div>
-            <p>Nenhum Pokémon encontrado.</p>
+    <div className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-12 flex flex-col items-center text-center relative">
+          <div className="mb-4 rounded-full bg-red-500 p-4 text-white shadow-lg">
+            <Ghost className="h-8 w-8" />
           </div>
-        )}
+          <h1 className="mb-2 text-4xl font-extrabold tracking-tight lg:text-5xl">
+            PokeReact <span className="text-red-500">19</span>
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            Modern Pokedex built with React 19 & Tailwind CSS
+          </p>
+        </header>
+
+        <main>
+          <PokemonFilter
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+
+          {error ? (
+            <div className="rounded-lg bg-red-50 p-4 text-red-500 dark:bg-red-900/20">
+              {error}
+            </div>
+          ) : (
+            <PokemonGrid
+              pokemons={filteredPokemons}
+              loading={loading}
+              onSelect={setSelectedPokemon}
+            />
+          )}
+        </main>
+
+        <PokemonDetailPanel
+          pokemon={selectedPokemon}
+          onClose={() => setSelectedPokemon(null)}
+        />
       </div>
-    </>
+    </div>
   );
-};
+}
 
 export default App;
