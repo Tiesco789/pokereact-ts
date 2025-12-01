@@ -16,7 +16,7 @@ Pokereact-TS nasceu como um projeto pessoal para treinar React + TypeScript + Vi
 - 🔹 Listagem de pokémons obtidos da PokeAPI;  
 - 🔹 Exibição em formato de cards com dados básicos dos pokémons;  
 - 🔹 Busca por nome de pokémon;  
-- 🔹 Configuração com Vite + TypeScript + Styled Components + Axios;  
+- 🔹 Configuração com Vite + TypeScript + TailwindCSS + Axios;  
 - 🔹 Código organizado e fácil de entender/modificar.  
 
 ## 🛠️ Tecnologias utilizadas
