@@ -24,7 +24,7 @@ Pokereact-TS nasceu como um projeto pessoal para treinar React + TypeScript + Vi
 - React  
 - TypeScript  
 - Vite (bundler / build)  
-- Styled Components (estilização)  
+- TailwindCSS (estilização)  
 - Axios (requisições HTTP)  
 - Prettier + EditorConfig (formatação de código)  
 
