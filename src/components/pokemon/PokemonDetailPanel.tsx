@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { animate, stagger } from 'animejs';
 import { X, Ruler, Weight, Activity, ArrowRight } from 'lucide-react';
 import { Pokemon } from '../../types/pokemon';
 import { usePokemonDetails, EvolutionNode } from '../../hooks/usePokemonDetails';
@@ -31,7 +33,6 @@ const typeColors: Record<string, string> = {
 
 // ─── Evolution rendering helpers ────────────────────────────────────────────
 
-/** A single Pokémon sprite + name bubble */
 function EvoSprite({ node, size = 'md' }: { node: EvolutionNode; size?: 'sm' | 'md' }) {
   const dim = size === 'sm' ? 'h-14 w-14' : 'h-20 w-20';
   return (
@@ -46,50 +47,36 @@ function EvoSprite({ node, size = 'md' }: { node: EvolutionNode; size?: 'sm' | '
   );
 }
 
-/** Arrow + optional trigger label */
-function EvoArrow({ trigger, vertical = false }: { trigger?: string; vertical?: boolean }) {
+function EvoArrow({ trigger }: { trigger?: string }) {
   return (
-    <div className={cn('flex items-center gap-1', vertical ? 'flex-col' : 'flex-col')}>
+    <div className="flex flex-col items-center gap-1">
       {trigger && (
         <span className="text-[10px] font-semibold capitalize text-slate-400 dark:text-slate-500 text-center leading-tight max-w-[60px]">
           {trigger}
         </span>
       )}
-      <ArrowRight className={cn('h-4 w-4 text-slate-300 dark:text-slate-600', vertical && 'rotate-90')} />
+      <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-600" />
     </div>
   );
 }
 
-/**
- * Renders the evolution tree recursively.
- *
- * - Linear chain (each node has ≤1 evolution): horizontal row
- * - Branching (node has >1 evolution, e.g. Eevee): base on left, branches stacked on right
- */
 function EvoTree({ node }: { node: EvolutionNode }) {
   const isBranching = node.evolutions.length > 1;
   const isLinear = node.evolutions.length === 1;
 
   if (isBranching) {
-    // Eevee-style: show base on left, all branches stacked on right
     return (
       <div className="flex items-center gap-3 w-full">
-        {/* Base Pokémon */}
         <EvoSprite node={node} />
-
-        {/* Arrow column */}
         <div className="flex flex-col gap-2">
           {node.evolutions.map((evo) => (
             <EvoArrow key={evo.name} trigger={evo.trigger} />
           ))}
         </div>
-
-        {/* All evolutions stacked */}
         <div className="flex flex-col gap-3 flex-1">
           {node.evolutions.map((evo) => (
             <div key={evo.name} className="flex items-center gap-2">
               <EvoSprite node={evo} size="sm" />
-              {/* If this branch also evolves further, show it inline */}
               {evo.evolutions.length > 0 && (
                 <>
                   <EvoArrow trigger={evo.evolutions[0].trigger} />
@@ -114,7 +101,6 @@ function EvoTree({ node }: { node: EvolutionNode }) {
     );
   }
 
-  // Leaf node
   return <EvoSprite node={node} />;
 }
 
@@ -123,14 +109,66 @@ function EvoTree({ node }: { node: EvolutionNode }) {
 export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps) {
   const { species, evolutionTree, loading } = usePokemonDetails(pokemon);
 
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const statsAnimatedRef = useRef(false);
+
+  // Panel slide-in on mount
+  useEffect(() => {
+    if (!pokemon || !panelRef.current || !backdropRef.current) return;
+    statsAnimatedRef.current = false;
+
+    // Backdrop fade in
+    animate(backdropRef.current, {
+      opacity: [0, 1],
+      duration: 300,
+      ease: 'outQuad',
+    });
+
+    // Panel slide in from right
+    animate(panelRef.current, {
+      translateX: ['100%', '0%'],
+      duration: 480,
+      ease: 'outExpo',
+    });
+  }, [pokemon]);
+
+  // Stat bars animate when panel content is ready
+  useEffect(() => {
+    if (!panelRef.current || statsAnimatedRef.current) return;
+    const bars = panelRef.current.querySelectorAll<HTMLElement>('.stat-bar-fill');
+    if (bars.length === 0) return;
+
+    statsAnimatedRef.current = true;
+
+    // Temporarily set width to 0 then animate to target
+    bars.forEach((bar) => {
+      const target = bar.dataset.width || '0%';
+      bar.style.width = '0%';
+      animate(bar, {
+        width: target,
+        delay: stagger(80),
+        duration: 700,
+        ease: 'outExpo',
+      });
+    });
+  });
+
   if (!pokemon) return null;
 
   const mainType = pokemon.types?.[0]?.type?.name || 'normal';
   const colorClass = typeColors[mainType] || 'bg-gray-400';
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm transition-all" onClick={onClose}>
+    <div
+      ref={backdropRef}
+      style={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
+        ref={panelRef}
+        style={{ transform: 'translateX(100%)' }}
         className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl dark:bg-slate-900 sm:w-[400px]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -201,26 +239,30 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
           </div>
         )}
 
-        {/* Base Stats */}
+        {/* Base Stats — animated bars */}
         <div className="mb-8">
           <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">Base Stats</h3>
           <div className="space-y-3">
-            {pokemon.stats.map((stat) => (
-              <div key={stat.stat.name} className="flex items-center gap-4">
-                <span className="w-24 text-sm font-medium capitalize text-slate-500 dark:text-slate-400">
-                  {stat.stat.name.replace('-', ' ')}
-                </span>
-                <span className="w-8 text-sm font-bold text-slate-900 dark:text-white">
-                  {stat.base_stat}
-                </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div
-                    className={cn('h-full rounded-full transition-all duration-500', colorClass)}
-                    style={{ width: `${(stat.base_stat / 255) * 100}%` }}
-                  />
+            {pokemon.stats.map((stat) => {
+              const pct = `${(stat.base_stat / 255) * 100}%`;
+              return (
+                <div key={stat.stat.name} className="flex items-center gap-4">
+                  <span className="w-24 text-sm font-medium capitalize text-slate-500 dark:text-slate-400">
+                    {stat.stat.name.replace('-', ' ')}
+                  </span>
+                  <span className="w-8 text-sm font-bold text-slate-900 dark:text-white">
+                    {stat.base_stat}
+                  </span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className={cn('stat-bar-fill h-full rounded-full', colorClass)}
+                      data-width={pct}
+                      style={{ width: '0%' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

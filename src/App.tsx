@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { animate, stagger } from 'animejs';
 import { usePokemon } from './hooks/usePokemon';
 import { PokemonGrid } from './components/pokemon/PokemonGrid';
 import { PokemonFilter } from './components/pokemon/PokemonFilter';
@@ -11,6 +12,31 @@ import { Ghost } from 'lucide-react';
 const PAGE_SIZE_DEFAULT = 100;
 
 function App() {
+  const headerLogoRef = useRef<HTMLDivElement>(null);
+  const headerTextRef = useRef<HTMLDivElement>(null);
+
+  // Header entrance animation on mount
+  useEffect(() => {
+    if (headerLogoRef.current) {
+      animate(headerLogoRef.current, {
+        scale: [0, 1],
+        opacity: [0, 1],
+        duration: 700,
+        ease: 'outBack(1.7)',
+      });
+    }
+    if (headerTextRef.current) {
+      const children = Array.from(headerTextRef.current.children) as HTMLElement[];
+      animate(children, {
+        translateY: [30, 0],
+        opacity: [0, 1],
+        delay: stagger(120, { start: 200 }),
+        duration: 600,
+        ease: 'outExpo',
+      });
+    }
+  }, []);
+
   // Generation filter — drives which ID range is fetched
   const [selectedGenId, setSelectedGenId] = useState<number | null>(null);
 
@@ -69,15 +95,21 @@ function App() {
     <div className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
       <div className="mx-auto max-w-7xl">
         <header className="mb-12 flex flex-col items-center text-center relative">
-          <div className="mb-4 rounded-full bg-red-500 p-4 text-white shadow-lg">
+          <div
+            ref={headerLogoRef}
+            style={{ opacity: 0, transform: 'scale(0)' }}
+            className="mb-4 rounded-full bg-red-500 p-4 text-white shadow-lg"
+          >
             <Ghost className="h-8 w-8" />
           </div>
-          <h1 className="mb-2 text-4xl font-extrabold tracking-tight lg:text-5xl">
-            PokeReact <span className="text-red-500">19</span>
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400">
-            Modern Pokédex built with React 19 &amp; Tailwind CSS
-          </p>
+          <div ref={headerTextRef}>
+            <h1 className="mb-2 text-4xl font-extrabold tracking-tight lg:text-5xl" style={{ opacity: 0 }}>
+              PokeReact <span className="text-red-500">19</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400" style={{ opacity: 0 }}>
+              Modern Pokédex built with React 19 &amp; Tailwind CSS
+            </p>
+          </div>
         </header>
 
         <main>

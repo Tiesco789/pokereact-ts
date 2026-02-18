@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { animate, stagger } from 'animejs';
 import { Search, X } from 'lucide-react';
 import { Input } from '../ui/input';
 import { GENERATIONS } from '../../lib/generations';
@@ -42,6 +44,25 @@ export function PokemonFilter({
   selectedGenId,
   onGenChange,
 }: PokemonFilterProps) {
+  const typePillsRef = useRef<HTMLDivElement>(null);
+  const prevTypesRef = useRef<string[]>([]);
+
+  // Animate type pills when they first appear
+  useEffect(() => {
+    if (!typePillsRef.current || availableTypes.length === 0) return;
+    if (prevTypesRef.current.join() === availableTypes.join()) return;
+    prevTypesRef.current = availableTypes;
+
+    const pills = Array.from(typePillsRef.current.children) as HTMLElement[];
+    animate(pills, {
+      scale: [0, 1],
+      opacity: [0, 1],
+      delay: stagger(30, { start: 80 }),
+      duration: 380,
+      ease: 'outBack(1.4)',
+    });
+  }, [availableTypes]);
+
   const pillNeutral =
     'bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700';
 
@@ -93,11 +114,11 @@ export function PokemonFilter({
         </div>
       </div>
 
-      {/* Type filter */}
+      {/* Type filter — animated pills */}
       {availableTypes.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Type</p>
-          <div className="flex flex-wrap gap-2">
+          <div ref={typePillsRef} className="flex flex-wrap gap-2">
             <button
               onClick={() => onTypeChange(null)}
               className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${selectedType === null
