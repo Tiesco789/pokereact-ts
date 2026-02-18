@@ -8,8 +8,48 @@ export interface EvolutionStep {
   id: number;
 }
 
+/** A node in the evolution tree. `evolutions` holds all possible next forms. */
+export interface EvolutionNode {
+  name: string;
+  id: number;
+  image: string;
+  /** Trigger label, e.g. "Fire Stone", "Level 36", "Friendship" */
+  trigger?: string;
+  evolutions: EvolutionNode[];
+}
+
+function extractTrigger(link: EvolutionChainLink): string | undefined {
+  const detail = link.evolution_details?.[0];
+  if (!detail) return undefined;
+
+  const itemName = detail.item?.name?.replace(/-/g, ' ');
+  if (itemName) return itemName;
+
+  if (detail.trigger?.name === 'level-up') {
+    if (detail.min_level) return `Lv. ${detail.min_level}`;
+    if (detail.min_happiness) return 'Friendship';
+    if (detail.time_of_day) return `${detail.time_of_day} (friendship)`;
+    return 'Level up';
+  }
+  if (detail.trigger?.name === 'trade') return 'Trade';
+  return detail.trigger?.name?.replace(/-/g, ' ');
+}
+
+function buildTree(link: EvolutionChainLink): EvolutionNode {
+  const id = parseInt(link.species.url.split('/').filter(Boolean).pop() || '0');
+  return {
+    name: link.species.name,
+    id,
+    image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
+    trigger: extractTrigger(link),
+    evolutions: link.evolves_to.map(buildTree),
+  };
+}
+
 export function usePokemonDetails(pokemon: Pokemon | null) {
   const [species, setSpecies] = useState<PokemonSpecies | null>(null);
+  const [evolutionTree, setEvolutionTree] = useState<EvolutionNode | null>(null);
+  /** Flat chain kept for backwards compat (linear evolutions) */
   const [evolutionChain, setEvolutionChain] = useState<EvolutionStep[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +58,7 @@ export function usePokemonDetails(pokemon: Pokemon | null) {
     if (!pokemon) {
       setSpecies(null);
       setEvolutionChain([]);
+      setEvolutionTree(null);
       return;
     }
 
@@ -25,38 +66,24 @@ export function usePokemonDetails(pokemon: Pokemon | null) {
       setLoading(true);
       setError(null);
       try {
-        // 1. Fetch Species to get Evolution Chain URL and flavor text
         const speciesResponse = await axios.get<PokemonSpecies>(pokemon.species.url);
         setSpecies(speciesResponse.data);
 
-        // 2. Fetch Evolution Chain
-        const evolutionResponse = await axios.get<EvolutionChain>(speciesResponse.data.evolution_chain.url);
+        const evolutionResponse = await axios.get<EvolutionChain>(
+          speciesResponse.data.evolution_chain.url
+        );
 
-        // 3. Process Evolution Chain
-        const chain: EvolutionStep[] = [];
-        let current: EvolutionChainLink | undefined = evolutionResponse.data.chain;
+        const tree = buildTree(evolutionResponse.data.chain);
+        setEvolutionTree(tree);
 
-        while (current) {
-          const speciesName = current.species.name;
-          // We need to fetch the pokemon data to get the image
-          // Optimization: We could cache this or use a predictable URL if available, 
-          // but fetching ensures we get the correct sprite.
-          // For simplicity/speed in this demo, we'll construct the image URL from ID if possible,
-          // or just fetch the basic info.
-          // The species URL contains the ID: https://pokeapi.co/api/v2/pokemon-species/1/
-          const id = parseInt(current.species.url.split('/').filter(Boolean).pop() || '0');
-
-          chain.push({
-            name: speciesName,
-            id: id,
-            image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
-          });
-
-          current = current.evolves_to[0]; // Simplified: only taking the first evolution path
+        // Build flat chain for simple linear cases
+        const flat: EvolutionStep[] = [];
+        let cur: EvolutionNode | undefined = tree;
+        while (cur) {
+          flat.push({ name: cur.name, id: cur.id, image: cur.image });
+          cur = cur.evolutions[0];
         }
-
-        setEvolutionChain(chain);
-
+        setEvolutionChain(flat);
       } catch (err) {
         console.error(err);
         setError('Failed to load details');
@@ -68,5 +95,5 @@ export function usePokemonDetails(pokemon: Pokemon | null) {
     fetchDetails();
   }, [pokemon]);
 
-  return { species, evolutionChain, loading, error };
+  return { species, evolutionChain, evolutionTree, loading, error };
 }

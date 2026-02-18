@@ -48,6 +48,13 @@ export interface EvolutionChainLink {
     url: string;
   };
   evolves_to: EvolutionChainLink[];
+  evolution_details: {
+    item: { name: string } | null;
+    trigger: { name: string } | null;
+    min_level: number | null;
+    min_happiness: number | null;
+    time_of_day: string;
+  }[];
 }
 
 export interface EvolutionChain {

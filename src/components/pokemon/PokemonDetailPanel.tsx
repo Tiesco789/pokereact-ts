@@ -1,6 +1,6 @@
-import { X, Ruler, Weight, Activity } from 'lucide-react';
+import { X, Ruler, Weight, Activity, ArrowRight } from 'lucide-react';
 import { Pokemon } from '../../types/pokemon';
-import { usePokemonDetails } from '../../hooks/usePokemonDetails';
+import { usePokemonDetails, EvolutionNode } from '../../hooks/usePokemonDetails';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 
@@ -29,8 +29,99 @@ const typeColors: Record<string, string> = {
   fairy: 'bg-pink-300',
 };
 
+// ─── Evolution rendering helpers ────────────────────────────────────────────
+
+/** A single Pokémon sprite + name bubble */
+function EvoSprite({ node, size = 'md' }: { node: EvolutionNode; size?: 'sm' | 'md' }) {
+  const dim = size === 'sm' ? 'h-14 w-14' : 'h-20 w-20';
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className={cn('rounded-full bg-slate-100 p-2 dark:bg-slate-800', dim)}>
+        <img src={node.image} alt={node.name} className="h-full w-full object-contain" />
+      </div>
+      <span className="text-xs font-medium capitalize text-slate-600 dark:text-slate-400 text-center leading-tight">
+        {node.name}
+      </span>
+    </div>
+  );
+}
+
+/** Arrow + optional trigger label */
+function EvoArrow({ trigger, vertical = false }: { trigger?: string; vertical?: boolean }) {
+  return (
+    <div className={cn('flex items-center gap-1', vertical ? 'flex-col' : 'flex-col')}>
+      {trigger && (
+        <span className="text-[10px] font-semibold capitalize text-slate-400 dark:text-slate-500 text-center leading-tight max-w-[60px]">
+          {trigger}
+        </span>
+      )}
+      <ArrowRight className={cn('h-4 w-4 text-slate-300 dark:text-slate-600', vertical && 'rotate-90')} />
+    </div>
+  );
+}
+
+/**
+ * Renders the evolution tree recursively.
+ *
+ * - Linear chain (each node has ≤1 evolution): horizontal row
+ * - Branching (node has >1 evolution, e.g. Eevee): base on left, branches stacked on right
+ */
+function EvoTree({ node }: { node: EvolutionNode }) {
+  const isBranching = node.evolutions.length > 1;
+  const isLinear = node.evolutions.length === 1;
+
+  if (isBranching) {
+    // Eevee-style: show base on left, all branches stacked on right
+    return (
+      <div className="flex items-center gap-3 w-full">
+        {/* Base Pokémon */}
+        <EvoSprite node={node} />
+
+        {/* Arrow column */}
+        <div className="flex flex-col gap-2">
+          {node.evolutions.map((evo) => (
+            <EvoArrow key={evo.name} trigger={evo.trigger} />
+          ))}
+        </div>
+
+        {/* All evolutions stacked */}
+        <div className="flex flex-col gap-3 flex-1">
+          {node.evolutions.map((evo) => (
+            <div key={evo.name} className="flex items-center gap-2">
+              <EvoSprite node={evo} size="sm" />
+              {/* If this branch also evolves further, show it inline */}
+              {evo.evolutions.length > 0 && (
+                <>
+                  <EvoArrow trigger={evo.evolutions[0].trigger} />
+                  <EvoSprite node={evo.evolutions[0]} size="sm" />
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isLinear) {
+    const next = node.evolutions[0];
+    return (
+      <div className="flex items-center gap-2">
+        <EvoSprite node={node} />
+        <EvoArrow trigger={next.trigger} />
+        <EvoTree node={next} />
+      </div>
+    );
+  }
+
+  // Leaf node
+  return <EvoSprite node={node} />;
+}
+
+// ─── Main panel ─────────────────────────────────────────────────────────────
+
 export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps) {
-  const { species, evolutionChain, loading } = usePokemonDetails(pokemon);
+  const { species, evolutionTree, loading } = usePokemonDetails(pokemon);
 
   if (!pokemon) return null;
 
@@ -43,6 +134,7 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
         className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl dark:bg-slate-900 sm:w-[400px]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold capitalize text-slate-900 dark:text-white">
             {pokemon.name}
@@ -52,7 +144,8 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
           </Button>
         </div>
 
-        <div className={cn("relative mb-8 flex items-center justify-center rounded-2xl p-8", colorClass)}>
+        {/* Artwork */}
+        <div className={cn('relative mb-8 flex items-center justify-center rounded-2xl p-8', colorClass)}>
           <img
             src={pokemon.sprites?.other?.['official-artwork']?.front_default || pokemon.sprites?.front_default}
             alt={pokemon.name}
@@ -60,12 +153,13 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
           />
         </div>
 
+        {/* Types */}
         <div className="mb-8 flex justify-center gap-2">
           {pokemon.types.map((type) => (
             <span
               key={type.type.name}
               className={cn(
-                "rounded-full px-4 py-1 text-sm font-bold text-white uppercase tracking-wider",
+                'rounded-full px-4 py-1 text-sm font-bold text-white uppercase tracking-wider',
                 typeColors[type.type.name] || 'bg-gray-400'
               )}
             >
@@ -74,6 +168,7 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
           ))}
         </div>
 
+        {/* Quick stats */}
         <div className="mb-8 grid grid-cols-3 gap-4 text-center">
           <div className="flex flex-col items-center rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
             <Ruler className="mb-2 h-5 w-5 text-slate-400" />
@@ -94,15 +189,19 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
           </div>
         </div>
 
+        {/* About */}
         {species && (
           <div className="mb-8">
             <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-white">About</h3>
             <p className="text-slate-600 dark:text-slate-300">
-              {species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/\f/g, ' ')}
+              {species.flavor_text_entries
+                .find((entry) => entry.language.name === 'en')
+                ?.flavor_text.replace(/\f/g, ' ')}
             </p>
           </div>
         )}
 
+        {/* Base Stats */}
         <div className="mb-8">
           <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">Base Stats</h3>
           <div className="space-y-3">
@@ -116,7 +215,7 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
                 </span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                   <div
-                    className={cn("h-full rounded-full transition-all duration-500", colorClass)}
+                    className={cn('h-full rounded-full transition-all duration-500', colorClass)}
                     style={{ width: `${(stat.base_stat / 255) * 100}%` }}
                   />
                 </div>
@@ -125,34 +224,26 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-600" />
-          </div>
-        ) : (
-          <div>
-            <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">Evolution Chain</h3>
-            <div className="flex items-center justify-between gap-2">
-              {evolutionChain.map((step, index) => (
-                <div key={step.id} className="flex flex-col items-center">
-                  <div className="relative mb-2 h-20 w-20 rounded-full bg-slate-100 p-2 dark:bg-slate-800">
-                    <img
-                      src={step.image}
-                      alt={step.name}
-                      className="h-full w-full object-contain"
-                    />
-                  </div>
-                  <span className="text-xs font-medium capitalize text-slate-600 dark:text-slate-400">
-                    {step.name}
-                  </span>
-                  {index < evolutionChain.length - 1 && (
-                    <div className="absolute left-1/2 hidden h-0.5 w-8 bg-slate-200 dark:bg-slate-700 sm:block" />
-                  )}
-                </div>
-              ))}
+        {/* Evolution Chain / Tree */}
+        <div>
+          <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">
+            {evolutionTree && evolutionTree.evolutions.length > 1
+              ? 'Evolution Possibilities'
+              : 'Evolution Chain'}
+          </h3>
+
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-600" />
             </div>
-          </div>
-        )}
+          ) : evolutionTree ? (
+            <div className="overflow-x-auto">
+              <EvoTree node={evolutionTree} />
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">No evolution data available.</p>
+          )}
+        </div>
       </div>
     </div>
   );
