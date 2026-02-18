@@ -1,43 +1,46 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Pokemon, PokemonApiResponse } from '../types/pokemon';
+import { Pokemon } from '../types/pokemon';
 
 const BASE_URL = 'https://pokeapi.co/api/v2/pokemon';
 
-export function usePokemon(limit = 151) {
+/** Fetch a range of Pokémon by national dex IDs [start, end] (inclusive). */
+export function usePokemon(start = 1, end = 1025) {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPokemons = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get<PokemonApiResponse>(`${BASE_URL}?limit=${limit}`);
-
-      // We need to fetch details for each pokemon to get the image and types
-      // The list endpoint only returns name and url
-      const results = response.data.results;
-
-      const detailedPokemons = await Promise.all(
-        results.map(async (pokemon) => {
-          const detailResponse = await axios.get(pokemon.url);
-          return detailResponse.data;
-        })
-      );
-
-      setPokemons(detailedPokemons);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch pokemons');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [limit]);
-
   useEffect(() => {
+    let cancelled = false;
+
+    async function fetchPokemons() {
+      try {
+        setLoading(true);
+        setPokemons([]);
+
+        const ids = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+        const detailedPokemons = await Promise.all(
+          ids.map((id) => axios.get<Pokemon>(`${BASE_URL}/${id}`).then((r) => r.data))
+        );
+
+        if (!cancelled) {
+          setPokemons(detailedPokemons);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('Failed to fetch Pokémon');
+          console.error(err);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
     fetchPokemons();
-  }, [fetchPokemons]);
+    return () => { cancelled = true; };
+  }, [start, end]);
 
   return { pokemons, loading, error };
 }
