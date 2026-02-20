@@ -40,8 +40,7 @@ function buildTree(link: EvolutionChainLink): EvolutionNode {
   return {
     name: link.species.name,
     id,
-    // image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
-    image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/animated/${id}.gif`,
+    image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
     trigger: extractTrigger(link),
     evolutions: link.evolves_to.map(buildTree),
   };
