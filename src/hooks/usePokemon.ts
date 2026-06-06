@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { Pokemon, PokemonApiResponse } from '../types/pokemon';
 
 const BASE_URL = 'https://pokeapi.co/api/v2/pokemon';
 const BATCH_SIZE = 20;
+
+// Module-level cache: avoids refetching when toggling between generations
+const pokemonCache = new Map<string, Pokemon[]>();
 
 /** Fetch a range of Pokémon by national dex IDs [start, end] (inclusive), in batches. */
 export function usePokemon(start = 1, end = 1025) {
@@ -13,8 +16,18 @@ export function usePokemon(start = 1, end = 1025) {
 
   useEffect(() => {
     let cancelled = false;
+    const cacheKey = `${start}-${end}`;
 
     async function fetchPokemons() {
+      // Check cache first
+      const cached = pokemonCache.get(cacheKey);
+      if (cached) {
+        setPokemons(cached);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -31,19 +44,28 @@ export function usePokemon(start = 1, end = 1025) {
 
         const urls = listRes.data.results.map((r) => r.url);
 
-        // Step 2: fetch details in batches, streaming results in as they arrive
-        const accumulated: Pokemon[] = [];
+        // Step 2: fetch details in batches, collecting all before updating state.
+        // The old code called setPokemons() per batch while loading=true, which
+        // caused ~50 wasted re-renders (each just re-showing the shimmer skeleton).
+        const allResults: Pokemon[] = [];
         for (let i = 0; i < urls.length; i += BATCH_SIZE) {
           if (cancelled) return;
           const batch = urls.slice(i, i + BATCH_SIZE);
           const batchResults = await Promise.all(
             batch.map((url) => axios.get<Pokemon>(url).then((r) => r.data))
           );
-          accumulated.push(...batchResults);
-          if (!cancelled) setPokemons([...accumulated]);
+          allResults.push(...batchResults);
         }
 
-        if (!cancelled) setError(null);
+        if (!cancelled) {
+          // Sort by ID to ensure consistent order
+          allResults.sort((a, b) => a.id - b.id);
+          // Cache results for future use
+          pokemonCache.set(cacheKey, allResults);
+          // Single state update instead of per-batch updates
+          setPokemons(allResults);
+          setError(null);
+        }
       } catch (err) {
         if (!cancelled) {
           setError('Failed to fetch Pokémon');
@@ -58,5 +80,7 @@ export function usePokemon(start = 1, end = 1025) {
     return () => { cancelled = true; };
   }, [start, end]);
 
-  return { pokemons, loading, error };
+  // Stable return reference: avoids creating a new object every render
+  // which would invalidate downstream useMemo/useEffect dependencies
+  return useMemo(() => ({ pokemons, loading, error }), [pokemons, loading, error]);
 }

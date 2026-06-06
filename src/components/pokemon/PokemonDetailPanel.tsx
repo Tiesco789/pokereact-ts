@@ -135,7 +135,7 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
 
   // Stat bars animate when panel content is ready
   useEffect(() => {
-    if (!panelRef.current || statsAnimatedRef.current) return;
+    if (!panelRef.current || statsAnimatedRef.current || loading) return;
     const bars = panelRef.current.querySelectorAll<HTMLElement>('.stat-bar-fill');
     if (bars.length === 0) return;
 
@@ -152,7 +152,7 @@ export function PokemonDetailPanel({ pokemon, onClose }: PokemonDetailPanelProps
         ease: 'outExpo',
       });
     });
-  });
+  }, [pokemon, loading]);
 
   if (!pokemon) return null;
 

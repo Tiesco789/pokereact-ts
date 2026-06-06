@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pokemon } from '../../types/pokemon';
 import { cn } from '../../lib/utils';
 
@@ -26,7 +27,7 @@ const typeColors: Record<string, string> = {
   fairy: 'bg-pink-300',
 };
 
-export function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
+export const PokemonCard = memo(function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
   const mainType = pokemon.types?.[0]?.type?.name || 'normal';
   const colorClass = typeColors[mainType] || 'bg-gray-400';
 
@@ -74,4 +75,4 @@ export function PokemonCard({ pokemon, onClick }: PokemonCardProps) {
       </div>
     </div>
   );
-}
+});

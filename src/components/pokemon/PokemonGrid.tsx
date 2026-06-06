@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { animate, stagger } from 'animejs';
 import { Pokemon } from '../../types/pokemon';
 import { PokemonCard } from './PokemonCard';
@@ -28,7 +28,7 @@ function ShimmerCard() {
   );
 }
 
-export function PokemonGrid({ pokemons, loading, onSelect }: PokemonGridProps) {
+export const PokemonGrid = memo(function PokemonGrid({ pokemons, loading, onSelect }: PokemonGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const prevKeyRef = useRef('');
 
@@ -112,4 +112,4 @@ export function PokemonGrid({ pokemons, loading, onSelect }: PokemonGridProps) {
       ))}
     </div>
   );
-}
+});

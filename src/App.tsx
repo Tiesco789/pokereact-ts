@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { animate, stagger } from 'animejs';
 import { usePokemon } from './hooks/usePokemon';
 import { PokemonGrid } from './components/pokemon/PokemonGrid';
@@ -57,6 +57,10 @@ function App() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
 
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+
+  // Stable callbacks for child components (avoid re-renders from new function refs)
+  const handleSelectPokemon = useCallback((p: Pokemon) => setSelectedPokemon(p), []);
+  const handleCloseDetail = useCallback(() => setSelectedPokemon(null), []);
 
   // Reset page when filters change
   const handleSearchChange = (v: string) => { setSearchTerm(v); setCurrentPage(1); };
@@ -132,7 +136,7 @@ function App() {
               <PokemonGrid
                 pokemons={pagedPokemons}
                 loading={loading}
-                onSelect={setSelectedPokemon}
+                onSelect={handleSelectPokemon}
               />
 
               <Pagination
@@ -149,7 +153,7 @@ function App() {
 
         <PokemonDetailPanel
           pokemon={selectedPokemon}
-          onClose={() => setSelectedPokemon(null)}
+          onClose={handleCloseDetail}
         />
       </div>
     </div>
